@@ -28,6 +28,23 @@ const char yourAreLogout[BUFFSIZE] = "Your Are Logout\n";
 const char youAreOnline[BUFFSIZE] = "\n>>Your Are on-line, in cmd mode\n";
 const char youHaveBeenOnline[BUFFSIZE] = "\nYou have been on-line\n";
 const char cmdPrompt[BUFFSIZE] = ">>\0";
+
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  sigFork
+ *  Description:  to avoid zombile 
+ * =====================================================================================
+ */
+		void
+sigFork ( int sig )
+{
+		pid_t pid;
+		int stat;
+		pid = waitpid(-1, &stat, 0);
+		printf("pid_t: %d , stat: %d\n", pid, stat);
+		return ;
+}		/* -----  end of function sigFork  ----- */
+
 /* 
  * ===  FUNCTION  ======================================================================
  *         Name:  getAccount
@@ -90,6 +107,8 @@ requestHandler( int sockfd, char *incomingMes)
 		char name[BUFFSIZE], passwd[BUFFSIZE], cmdBuf[BUFFSIZE];
 		char cmd[BUFFSIZE], userSay[BUFFSIZE];
 		int i = 0, j = 0;
+		pid_t pid;
+		int fd1[2], fd2[2];
 
 		if ( offLine == allUsers[sockfd].stage ) { /* request client to input account */
 				write(sockfd, yourName, strlen(yourName));
@@ -145,7 +164,40 @@ requestHandler( int sockfd, char *incomingMes)
 				}
 
 				if ( !strcmp("ls", incomingMes) ) {
-						execl("/bin/ls", "-al", (char*)0 );
+
+
+						if ( 0 > pipe(fd1) || 0 > pipe(fd2) ) {
+								fprintf(stderr, "pipe errer");
+						}
+						if ( 0 < ( pid = fork()) ) { /* parent */
+								close(fd1[0]);
+								close(fd2[1]);
+
+								bzero(cmdBuf, BUFFSIZE);
+								if ( 0 > read(fd2[0], cmdBuf, BUFFSIZE) ) {
+										printf ( "read error in line 177\n" );
+								}
+								else {
+										cmdBuf[strlen(cmdBuf)] = '\0';
+										write(sockfd, cmdBuf, strlen(cmdBuf));
+								}
+
+								signal(SIGCHLD, sigFork);               /* to avoid zombile */
+						}
+						else {                  /* son */
+
+								close(fd1[1]);
+								close(fd2[0]);
+								dup2(fd1[0], fileno(stdin));
+								close(fd1[0]);
+								dup2(fd2[1], fileno(stdout));
+								close(fd2[1]);
+								execlp("ls","ls" "-al", NULL );
+//								if ( errno == ENOENT ) {
+//										printf ( "%s, %d\n","ENOENT", errno );
+//										perror("err: ");
+//								}
+						}
 				}
 		}
 

@@ -1,6 +1,6 @@
 cc=gcc
 opt=-o myServer
-obj=hw2.c  handler.c
+obj=hw3.c  handler.c
 all: 
 	$(cc) $(obj) $(opt) 
 run:

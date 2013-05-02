@@ -79,7 +79,7 @@ str_cli ( int out, int in, int sockfd )
 
 				if ( FD_ISSET(sockfd, &rset) ) {
 						if ( 0 == read(sockfd, recvLine, BUFSIZE) ) {
-								fprintf(stderr, "server terminated");
+								fprintf(stderr, "server terminated\n");
 								return ;
 						}
 
