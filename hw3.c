@@ -18,6 +18,21 @@
 
 #include "func.h"
 
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  sigFork
+ *  Description:  to avoid zombile 
+ * =====================================================================================
+ */
+		void
+sigFork ( int sig )
+{
+		pid_t pid;
+		int stat;
+		pid = waitpid(-1, &stat, 0);
+		printf("pid_t: %d , stat: %d\n", pid, stat);
+		return ;
+}		/* -----  end of function sigFork  ----- */
 
 /* 
  * ===  FUNCTION  ======================================================================
@@ -43,6 +58,7 @@ main ( int argc, char *argv[] )
 
 		printf ( "The server is running\n" );
 
+		signal(SIGCHLD, sigFork);               /* to avoid zombile */
 
 		if ( !socketId ) {
 				fprintf(stderr, "socket failed");
@@ -105,22 +121,21 @@ main ( int argc, char *argv[] )
 								continue;
 				}
 				for ( i=0; i <= maxi ; i++ ) {
-						if ( 0 > ( sockfd = client[i] ) )
+						if ( 0 > ( client[i] ) )
 								continue;
 
-						if ( FD_ISSET( sockfd, &rset) ) {
+						if ( FD_ISSET( client[i], &rset) ) {
 								bzero(buf, BUFFSIZE);
-								if ( 0 == ( n = read(sockfd, buf, BUFFSIZE) ) ) {
+								if ( 0 == ( n = read(client[i], buf, BUFFSIZE) ) ) {
 										strcpy(buf, "logout");
-										buf[strlen(buf)] = '\0';
-										requestHandler(sockfd, buf);
-										close(sockfd);
-										FD_CLR(sockfd, &allset);
+										printf ( "client sockfd :%d terminated \n", client[i] );
+										requestHandler( socketId, client[i], buf);
+										close(client[i]);
+										FD_CLR(client[i], &allset);
 										client[i] = -1;
 								}
 								else {
-										buf[strlen(buf)] = '\0';
-										requestHandler(sockfd, buf);
+										requestHandler( socketId, client[i], buf);
 								}
 
 								if ( 0 >= --nready )

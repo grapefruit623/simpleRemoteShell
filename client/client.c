@@ -86,17 +86,14 @@ str_cli ( int out, int in, int sockfd )
 						if ( !strcmp(">>Password:", recvLine) )
 								isPasswd = 1;
 						write(out, recvLine, strlen(recvLine));
+
 						if ( 1 == isPasswd )
 								echo_off();
 				}
 				if ( FD_ISSET(in, &rset) ) {
-
-
 						if ( 0 == read(in, sendLine, BUFSIZE) ) {
 									return ;	
 						}
-
-
 						if ( 1 == isPasswd ) {
 								echo_on();
 								isPasswd = 0;

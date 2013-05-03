@@ -29,21 +29,6 @@ const char youAreOnline[BUFFSIZE] = "\n>>Your Are on-line, in cmd mode\n";
 const char youHaveBeenOnline[BUFFSIZE] = "\nYou have been on-line\n";
 const char cmdPrompt[BUFFSIZE] = ">>\0";
 
-/* 
- * ===  FUNCTION  ======================================================================
- *         Name:  sigFork
- *  Description:  to avoid zombile 
- * =====================================================================================
- */
-		void
-sigFork ( int sig )
-{
-		pid_t pid;
-		int stat;
-		pid = waitpid(-1, &stat, 0);
-		printf("pid_t: %d , stat: %d\n", pid, stat);
-		return ;
-}		/* -----  end of function sigFork  ----- */
 
 /* 
  * ===  FUNCTION  ======================================================================
@@ -102,28 +87,28 @@ initial ( )
  * =====================================================================================
  */
 		int
-requestHandler( int sockfd, char *incomingMes)
+requestHandler( int socketId, int acceptId, char *incomingMes)
 {
 		char name[BUFFSIZE], passwd[BUFFSIZE], cmdBuf[BUFFSIZE];
 		char cmd[BUFFSIZE], userSay[BUFFSIZE];
 		int i = 0, j = 0;
 		pid_t pid;
 		int fd1[2], fd2[2];
-
-		if ( offLine == allUsers[sockfd].stage ) { /* request client to input account */
-				write(sockfd, yourName, strlen(yourName));
-				allUsers[sockfd].stage = inputAccount;
+		printf ( "%s from %d\n", incomingMes, acceptId );
+		if ( offLine == allUsers[acceptId].stage ) { /* request client to input account */
+				write(acceptId, yourName, strlen(yourName));
+				allUsers[acceptId].stage = inputAccount;
 				return 1;
 		}
-		if ( inputAccount == allUsers[sockfd].stage ) { /* it get account, now client should send passwd */
+		if ( inputAccount == allUsers[acceptId].stage ) { /* it get account, now client should send passwd */
 				printf ( "Now the incomingMes is account\n" );
 				strcpy(name, incomingMes);
-				write(sockfd, yourPasswd, strlen(yourPasswd));
-				allUsers[sockfd].stage = inputPasswd; 
+				write(acceptId, yourPasswd, strlen(yourPasswd));
+				allUsers[acceptId].stage = inputPasswd; 
 				return 1;
 		}
 
-		if ( inputPasswd == allUsers[sockfd].stage ) { /* to match account data */
+		if ( inputPasswd == allUsers[acceptId].stage ) { /* to match account data */
 				printf ( "Now your should input passwd\n" );
 				strcpy(passwd, incomingMes);
 
@@ -135,72 +120,76 @@ requestHandler( int sockfd, char *incomingMes)
 								for ( j=0; j<userCanHandle ; j++ ) { /* check repeat log-in */
 
 										if ( !strcmp( allUsers[j].name, name) && ( cmdMode == allUsers[j].stage )) {
-												write(sockfd, youHaveBeenOnline, strlen(youHaveBeenOnline));
+												write(acceptId, youHaveBeenOnline, strlen(youHaveBeenOnline));
 												return 1;
 										}
 								}
-								write(sockfd, youAreOnline, strlen(youAreOnline));
-								allUsers[sockfd].stage = cmdMode;
-								strcpy(allUsers[sockfd].name, name);
-								strcpy(allUsers[sockfd].passwd, passwd);
-								allUsers[sockfd].socket = sockfd;
-								allUsers[sockfd].serverCache = i; /* the index of user on the account data  */
+								write(acceptId, youAreOnline, strlen(youAreOnline));
+								allUsers[acceptId].stage = cmdMode;
+								strcpy(allUsers[acceptId].name, name);
+								strcpy(allUsers[acceptId].passwd, passwd);
+								allUsers[acceptId].socket = acceptId;
+								allUsers[acceptId].serverCache = i; /* the index of user on the account data  */
 
 
-								printf ( "%s %d\n", allUsers[sockfd].name, sockfd );
+								printf ( "%s %d\n", allUsers[acceptId].name, acceptId );
 								return 1;
 						}
 				}
-				allUsers[sockfd].stage = offLine;
-				write(sockfd, youAreNotUser, strlen(youAreNotUser));
+				allUsers[acceptId].stage = offLine;
+				write(acceptId, youAreNotUser, strlen(youAreNotUser));
 		}
-		if ( cmdMode == allUsers[sockfd].stage ) { /* the cmd mode */
+		if ( cmdMode == allUsers[acceptId].stage ) { /* the cmd mode */
 
 				if ( !strcmp("logout", incomingMes) ) {
-						allUsers[sockfd].stage = offLine;
-						write(sockfd, yourAreLogout, strlen(yourAreLogout));
-						strcpy(allUsers[sockfd].name, "offLine");
-						strcpy(allUsers[sockfd].passwd, "offLine");
+						allUsers[acceptId].stage = offLine;
+						write(acceptId, yourAreLogout, strlen(yourAreLogout));
+						strcpy(allUsers[acceptId].name, "offLine");
+						strcpy(allUsers[acceptId].passwd, "offLine");
 				}
 
 				if ( !strcmp("ls", incomingMes) ) {
 
-
 						if ( 0 > pipe(fd1) || 0 > pipe(fd2) ) {
 								fprintf(stderr, "pipe errer");
 						}
-						if ( 0 < ( pid = fork()) ) { /* parent */
-								close(fd1[0]);
-								close(fd2[1]);
 
-								bzero(cmdBuf, BUFFSIZE);
-								if ( 0 > read(fd2[0], cmdBuf, BUFFSIZE) ) {
-										printf ( "read error in line 177\n" );
-								}
-								else {
-										cmdBuf[strlen(cmdBuf)] = '\0';
-										write(sockfd, cmdBuf, strlen(cmdBuf));
-								}
-
-								signal(SIGCHLD, sigFork);               /* to avoid zombile */
+						if ( 0 > ( pid = fork() ) ) {
+								printf ( "fork error\n" );
 						}
-						else {                  /* son */
+						else {
+								if ( 0 <  pid  ) { /* parent */
+//										close(fd1[0]);
+//										close(fd2[1]);
+//
+//										bzero(cmdBuf, BUFFSIZE);
+//										if ( 0 > read(fd2[0], cmdBuf, BUFFSIZE) ) {
+//												printf ( "read error in line 177\n" );
+//										}
+//										else {
+//												cmdBuf[strlen(cmdBuf)] = '\0';
+//												write(acceptId, cmdBuf, strlen(cmdBuf));
+//										}
+										printf ( "I am your father %d\n", getpid() );
+								}
+								else {                  /* son */
 
-								close(fd1[1]);
-								close(fd2[0]);
-								dup2(fd1[0], fileno(stdin));
-								close(fd1[0]);
-								dup2(fd2[1], fileno(stdout));
-								close(fd2[1]);
-								execlp("ls","ls" "-al", NULL );
-//								if ( errno == ENOENT ) {
-//										printf ( "%s, %d\n","ENOENT", errno );
-//										perror("err: ");
-//								}
+//										close(fd1[1]);
+//										close(fd2[0]);
+//										dup2(fd1[0], fileno(stdin));
+//										close(fd1[0]);
+//										dup2(fd2[1], fileno(stdout));
+//										close(fd2[1]);
+//										execlp("ls","ls" "-al", NULL );
+										close(acceptId);
+										close(socketId);
+										printf ( "I am a son %d\n", getpid() );
+										exit(0);
+								}
 						}
 				}
 		}
-
+		printf ( "who am i %d\n", getpid() );
 		return 0;
 }
 

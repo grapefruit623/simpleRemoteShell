@@ -61,6 +61,6 @@ typedef struct user User;
 
 int login( int acceptId, const char *name );
 int	userIsExist( const char *name, const char *passwd );
-int requestHandler( int sockfd, char *incomingMes );
+int requestHandler( int sockerId, int acceptId, char *incomingMes );
 void getAccount();
 #endif 
