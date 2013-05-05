@@ -58,7 +58,7 @@ main ( int argc, char *argv[] )
 
 		printf ( "The server is running\n" );
 
-		signal(SIGCHLD, sigFork);               /* to avoid zombile */
+//		signal(SIGCHLD, sigFork);               /* to avoid zombile */
 
 		if ( !socketId ) {
 				fprintf(stderr, "socket failed");

@@ -101,7 +101,7 @@ requestHandler( int socketId, int acceptId, char *incomingMes)
 				return 1;
 		}
 		if ( inputAccount == allUsers[acceptId].stage ) { /* it get account, now client should send passwd */
-				printf ( "Now the incomingMes is account\n" );
+//				printf ( "Now the incomingMes is account\n" );
 				strcpy(name, incomingMes);
 				write(acceptId, yourPasswd, strlen(yourPasswd));
 				allUsers[acceptId].stage = inputPasswd; 
@@ -109,13 +109,13 @@ requestHandler( int socketId, int acceptId, char *incomingMes)
 		}
 
 		if ( inputPasswd == allUsers[acceptId].stage ) { /* to match account data */
-				printf ( "Now your should input passwd\n" );
+//				printf ( "Now your should input passwd\n" );
 				strcpy(passwd, incomingMes);
 
 				for ( i=0 ; i<howManyUsers ; i++ ) {
 
 						if ( !strcmp(legalUsers[i].name, name) && !strcmp(legalUsers[i].passwd, passwd) ) { /* the user is exist on prebuilt file */
-								printf ( "hello %s, %s\n", name, passwd );
+//								printf ( "hello %s, %s\n", name, passwd );
 
 								for ( j=0; j<userCanHandle ; j++ ) { /* check repeat log-in */
 
@@ -132,7 +132,7 @@ requestHandler( int socketId, int acceptId, char *incomingMes)
 								allUsers[acceptId].serverCache = i; /* the index of user on the account data  */
 
 
-								printf ( "%s %d\n", allUsers[acceptId].name, acceptId );
+//								printf ( "%s %d\n", allUsers[acceptId].name, acceptId );
 								return 1;
 						}
 				}
@@ -159,30 +159,33 @@ requestHandler( int socketId, int acceptId, char *incomingMes)
 						}
 						else {
 								if ( 0 <  pid  ) { /* parent */
-//										close(fd1[0]);
-//										close(fd2[1]);
-//
-//										bzero(cmdBuf, BUFFSIZE);
-//										if ( 0 > read(fd2[0], cmdBuf, BUFFSIZE) ) {
-//												printf ( "read error in line 177\n" );
-//										}
-//										else {
-//												cmdBuf[strlen(cmdBuf)] = '\0';
-//												write(acceptId, cmdBuf, strlen(cmdBuf));
-//										}
+										close(fd1[0]);
+										close(fd2[1]);
+
+										bzero(cmdBuf, BUFFSIZE);
+										if ( 0 > read(fd2[0], cmdBuf, BUFFSIZE) ) {
+												printf ( "read error in line 177\n" );
+										}
+										else {
+												cmdBuf[strlen(cmdBuf)] = '\0';
+												write(acceptId, cmdBuf, strlen(cmdBuf));
+										}
 										printf ( "I am your father %d\n", getpid() );
+										int stat;
+										pid_t pid;
+										pid = waitpid(-1, &stat, 0);
+//										write(acceptId, "hello client", strlen("hello client"));
 								}
 								else {                  /* son */
 
-//										close(fd1[1]);
-//										close(fd2[0]);
-//										dup2(fd1[0], fileno(stdin));
-//										close(fd1[0]);
-//										dup2(fd2[1], fileno(stdout));
-//										close(fd2[1]);
-//										execlp("ls","ls" "-al", NULL );
 										close(acceptId);
-										close(socketId);
+										close(fd1[1]);
+										close(fd2[0]);
+										dup2(fd1[0], fileno(stdin));
+										close(fd1[0]);
+										dup2(fd2[1], fileno(stdout));
+										close(fd2[1]);
+										execlp("ls","ls" "-al", NULL );
 										printf ( "I am a son %d\n", getpid() );
 										exit(0);
 								}
