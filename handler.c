@@ -94,7 +94,7 @@ requestHandler( int socketId, int acceptId, char *incomingMes)
 		int i = 0, j = 0;
 		pid_t pid;
 		int fd1[2], fd2[2];
-		printf ( "%s from %d\n", incomingMes, acceptId );
+//		printf ( "%s from %d\n", incomingMes, acceptId );
 		if ( offLine == allUsers[acceptId].stage ) { /* request client to input account */
 				write(acceptId, yourName, strlen(yourName));
 				allUsers[acceptId].stage = inputAccount;
@@ -185,14 +185,15 @@ requestHandler( int socketId, int acceptId, char *incomingMes)
 										close(fd1[0]);
 										dup2(fd2[1], fileno(stdout));
 										close(fd2[1]);
-										execlp("ls","ls" "-al", NULL );
+										printf ( "I am a son \n" );
 										printf ( "I am a son %d\n", getpid() );
+										execlp("ls","ls" "-al", NULL );
 										exit(0);
 								}
 						}
 				}
 		}
-		printf ( "who am i %d\n", getpid() );
+//		printf ( "who am i %d\n", getpid() );
 		return 0;
 }
 
