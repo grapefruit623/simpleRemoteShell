@@ -59,6 +59,7 @@ struct user {
 typedef struct user User;
 
 
+void initial();
 int login( int acceptId, const char *name );
 int	userIsExist( const char *name, const char *passwd );
 int requestHandler( int sockerId, int acceptId, char *incomingMes );

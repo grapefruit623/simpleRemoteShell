@@ -70,7 +70,7 @@ getAccount ( )
 initial ( )
 {
 		int i = 0;
-		
+		printf ( "The initial step\n" );
 		getAccount();
 		for ( i = 0; i<userCanHandle ; i++ ) {
 				allUsers[i].stage = offLine;
