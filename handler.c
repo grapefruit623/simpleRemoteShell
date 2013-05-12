@@ -162,18 +162,12 @@ requestHandler( int socketId, int acceptId, char *incomingMes)
 										close(fd[1]);
 
 										bzero(cmdBuf, BUFFSIZE);
-										if ( 0 > read(fd[0], cmdBuf, BUFFSIZE) ) {
-												printf ( "read error in line 177\n" );
-										}
-										else {
+										while ( 0 < read(fd[0], cmdBuf, BUFFSIZE) ) {
 												cmdBuf[strlen(cmdBuf)] = '\0';
 												printf ( "I recvive %s\n", cmdBuf );
 												write(acceptId, cmdBuf, strlen(cmdBuf));
 										}
 										printf ( "I am father %d\n", getpid() );
-//										pid_t pid;
-//										int stat;
-//										pid = waitpid(-1, &stat, 0);
 								}
 								else {                  /* son */
 
@@ -184,7 +178,7 @@ requestHandler( int socketId, int acceptId, char *incomingMes)
 												printf ( "error for dup2\n" );
 										}
 										printf ( "I am a son %d\n", getpid() );
-										execlp("/bin/ls","ls", "-al", NULL );
+										execl("/bin/bash","ls", NULL );
 										exit(0);
 								}
 						}
