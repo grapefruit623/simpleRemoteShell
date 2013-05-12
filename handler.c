@@ -93,7 +93,7 @@ requestHandler( int socketId, int acceptId, char *incomingMes)
 		char cmd[BUFFSIZE], userSay[BUFFSIZE];
 		int i = 0, j = 0;
 		pid_t pid;
-		int fd1[2], fd2[2];
+		int fd[2];
 //		printf ( "%s from %d\n", incomingMes, acceptId );
 		if ( offLine == allUsers[acceptId].stage ) { /* request client to input account */
 				write(acceptId, yourName, strlen(yourName));
@@ -150,7 +150,7 @@ requestHandler( int socketId, int acceptId, char *incomingMes)
 
 				if ( !strcmp("ls", incomingMes) ) {
 
-						if ( 0 > pipe(fd1) || 0 > pipe(fd2) ) {
+						if ( 0 > pipe(fd) ) {
 								fprintf(stderr, "pipe errer");
 						}
 
@@ -159,35 +159,32 @@ requestHandler( int socketId, int acceptId, char *incomingMes)
 						}
 						else {
 								if ( 0 <  pid  ) { /* parent */
-										close(fd1[0]);
-										close(fd2[1]);
+										close(fd[1]);
 
 										bzero(cmdBuf, BUFFSIZE);
-										if ( 0 > read(fd2[0], cmdBuf, BUFFSIZE) ) {
+										if ( 0 > read(fd[0], cmdBuf, BUFFSIZE) ) {
 												printf ( "read error in line 177\n" );
 										}
 										else {
 												cmdBuf[strlen(cmdBuf)] = '\0';
+												printf ( "I recvive %s\n", cmdBuf );
 												write(acceptId, cmdBuf, strlen(cmdBuf));
 										}
-										printf ( "I am your father %d\n", getpid() );
-										int stat;
-										pid_t pid;
-										pid = waitpid(-1, &stat, 0);
-//										write(acceptId, "hello client", strlen("hello client"));
+										printf ( "I am father %d\n", getpid() );
+//										pid_t pid;
+//										int stat;
+//										pid = waitpid(-1, &stat, 0);
 								}
 								else {                  /* son */
 
 										close(acceptId);
-										close(fd1[1]);
-										close(fd2[0]);
-										dup2(fd1[0], fileno(stdin));
-										close(fd1[0]);
-										dup2(fd2[1], fileno(stdout));
-										close(fd2[1]);
-										printf ( "I am a son \n" );
+										close(socketId);
+										close(fd[0]);
+										if ( 0 >  dup2(fd[1], fileno(stdout)) ) {
+												printf ( "error for dup2\n" );
+										}
 										printf ( "I am a son %d\n", getpid() );
-										execlp("ls","ls" "-al", NULL );
+										execlp("/bin/ls","ls", "-al", NULL );
 										exit(0);
 								}
 						}
