@@ -146,6 +146,7 @@ requestHandler( int socketId, int acceptId, char *incomingMes)
 						write(acceptId, yourAreLogout, strlen(yourAreLogout));
 						strcpy(allUsers[acceptId].name, "offLine");
 						strcpy(allUsers[acceptId].passwd, "offLine");
+						return ;
 				}
 
 				if ( !strcmp("ls", incomingMes) ) {
@@ -178,7 +179,7 @@ requestHandler( int socketId, int acceptId, char *incomingMes)
 												printf ( "error for dup2\n" );
 										}
 										printf ( "I am a son %d\n", getpid() );
-										execl("/bin/bash","ls", NULL );
+										execl("/bin/bash", "bash", "-c", "ls", NULL );
 										exit(0);
 								}
 						}
