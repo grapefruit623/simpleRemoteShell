@@ -165,6 +165,10 @@ requestHandler( int socketId, int acceptId, char *incomingMes)
 														cmdBuf[strlen(cmdBuf)] = '\0';
 														write(acceptId, cmdBuf, strlen(cmdBuf));
 												}
+												pid_t pid;
+												int stat;
+												pid = waitpid(-1, &stat, 0);
+												printf("pid_t: %d , stat: %d\n", pid, stat);
 												printf ( "I am father %d\n", getpid() );
 										}
 										else {                  /* son */
