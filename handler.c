@@ -148,9 +148,7 @@ requestHandler( int socketId, int acceptId, char *incomingMes)
 						strcpy(allUsers[acceptId].passwd, "offLine");
 						return ;
 				}
-
-				if ( !strcmp("ls", incomingMes) ) {
-
+				else {
 						if ( 0 > pipe(fd) ) {
 								fprintf(stderr, "pipe errer");
 						}
@@ -178,8 +176,7 @@ requestHandler( int socketId, int acceptId, char *incomingMes)
 										if ( 0 >  dup2(fd[1], fileno(stdout)) ) {
 												printf ( "error for dup2\n" );
 										}
-										printf ( "I am a son %d\n", getpid() );
-										execl("/bin/bash", "bash", "-c", "ls", NULL );
+										execl("/bin/bash", "bash", "-c", incomingMes, NULL );
 										exit(0);
 								}
 						}
