@@ -149,35 +149,35 @@ requestHandler( int socketId, int acceptId, char *incomingMes)
 						return ;
 				}
 				else {
-						if ( 0 > pipe(fd) ) {
-								fprintf(stderr, "pipe errer");
-						}
-
-						if ( 0 > ( pid = fork() ) ) {
-								printf ( "fork error\n" );
-						}
-						else {
-								if ( 0 <  pid  ) { /* parent */
-										close(fd[1]);
-
-										bzero(cmdBuf, BUFFSIZE);
-										while ( 0 < read(fd[0], cmdBuf, BUFFSIZE) ) {
-												cmdBuf[strlen(cmdBuf)] = '\0';
-												printf ( "I recvive %s\n", cmdBuf );
-												write(acceptId, cmdBuf, strlen(cmdBuf));
-										}
-										printf ( "I am father %d\n", getpid() );
+						if ( strcmp(incomingMes, "\n") ) { /* space do not rum any cmd */
+								if ( 0 > pipe(fd) ) {
+										fprintf(stderr, "pipe errer");
 								}
-								else {                  /* son */
 
-										close(acceptId);
-										close(socketId);
-										close(fd[0]);
-										if ( 0 >  dup2(fd[1], fileno(stdout)) ) {
-												printf ( "error for dup2\n" );
+								if ( 0 > ( pid = fork() ) ) {
+										printf ( "fork error\n" );
+								}
+								else {
+										if ( 0 <  pid  ) { /* parent */
+												close(fd[1]);
+												bzero(cmdBuf, BUFFSIZE);
+												while ( 0 < read(fd[0], cmdBuf, BUFFSIZE) ) {
+														cmdBuf[strlen(cmdBuf)] = '\0';
+														write(acceptId, cmdBuf, strlen(cmdBuf));
+												}
+												printf ( "I am father %d\n", getpid() );
 										}
-										execl("/bin/bash", "bash", "-c", incomingMes, NULL );
-										exit(0);
+										else {                  /* son */
+
+												printf ( "Son exec %s\n", incomingMes );
+												close(acceptId);
+												close(fd[0]);
+												if ( 0 >  dup2(fd[1], fileno(stdout)) ) {
+														printf ( "error for dup2\n" );
+												}
+												execl("/bin/bash", "bash", "-c", incomingMes, NULL );
+												exit(0);
+										}
 								}
 						}
 				}
